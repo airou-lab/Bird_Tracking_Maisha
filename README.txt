@@ -1,0 +1,1 @@
+The code can be run on ipython as a jupyter notebook. Even it can be run using colab. Just place the path of the input file and give the name and path of the output file and it will run and generate the output video as mp4. 
