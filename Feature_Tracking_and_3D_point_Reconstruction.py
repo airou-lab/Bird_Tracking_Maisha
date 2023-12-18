@@ -101,35 +101,35 @@ for m, n in matches:
         
 
 
-# Ensure there are enough good matches to proceed
+# Ensure there are enough good matches to proceed, The code begins by checking if there are enough "good matches" between keypoints in two images. This is a common strategy to filter out unreliable matches.
 if len(good_matches) > 8:
     points1 = np.float32([keypoints_1[m.queryIdx].pt for m in good_matches])
-    points2 = np.float32([keypoints_2[m.trainIdx].pt for m in good_matches])
+    points2 = np.float32([keypoints_2[m.trainIdx].pt for m in good_matches]) #It extracts the 2D coordinates of matched keypoints from both images.
 
-    # Find fundamental matrix using RANSAC
+    # Find fundamental matrix using RANSAC, it uses RANSAC to find the fundamental matrix (F) that describes the geometric relationship between the two images.
     F, mask = cv2.findFundamentalMat(points1, points2, cv2.FM_RANSAC)
 
     # Check if a valid fundamental matrix was found
-    if F is not None and F.shape == (3, 3) and mask is not None:
+    if F is not None and F.shape == (3, 3) and mask is not None: #It checks if a valid fundamental matrix was found.
         points1 = points1[mask.ravel() == 1]
-        points2 = points2[mask.ravel() == 1]
+        points2 = points2[mask.ravel() == 1]   #for removing outliers, It removes outliers based on the RANSAC mask
 
         # Find essential matrix
-        E = K.T @ F @ K
+        E = K.T @ F @ K  #calibration(transpose). elementwise dot. fundamental matrix. calibration #It calculates the essential matrix (E) using the camera calibration matrix (K).
 
         # Recover pose
-        _, R, t, mask_pose = cv2.recoverPose(E, points1, points2, K)
+        _, R, t, mask_pose = cv2.recoverPose(E, points1, points2, K) #It recovers the relative pose (rotation matrix R and translation vector t) between the two cameras.
 
         
         img_matches = cv2.drawMatches(img1, keypoints_1, img2, keypoints_2, good_matches, None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
-        # Triangulation
+        # Triangulation, It performs triangulation to obtain 3D coordinates (points_3D) of the matched keypoints.
         P1 = np.hstack((np.eye(3, 3), np.zeros((3, 1))))
         P2 = np.hstack((R, t))
         points_4D_hom = cv2.triangulatePoints(P1, P2, points1.T, points2.T)
         points_3D = points_4D_hom / points_4D_hom[3]  # Convert to 3D
 
-        # Display results
+        # Display results, It visualizes the matching results and creates a 3D scatter plot of the reconstructed points.
         plt.imshow(img_matches), plt.show()
 
         # Print the 3D points
